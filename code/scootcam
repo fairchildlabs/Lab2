@@ -1,0 +1,3 @@
+
+./scootd &
+python menu.py
