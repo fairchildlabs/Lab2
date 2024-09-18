@@ -39,7 +39,7 @@ void scootd_state_change(unsigned int old_state, scootd_thread_config *pScootdTh
 {
 	scoot_device *pScootDevice = pScootdThreads->pScootDevice;
 
-		
+	printf("scootd_state_change = %d\n", pScootDevice->pState->state);		
 	
 	if(pScootDevice->pState->bits.video0)
 	{
@@ -49,8 +49,14 @@ void scootd_state_change(unsigned int old_state, scootd_thread_config *pScootdTh
 
 		if(pThread->thread_handle)
 		{
+
+			printf("Send Q to pipe\n");
+			//scootd_util_character_to_pipe(&pScootdThreads[SCOOTD_THREAD_VIDEO_0], 'q');
+			pclose(pThread->pipe);
+			usleep(100);
 			printf("Thread[SCOOTD_THREAD_VIDEO_0] exits =%p, pThread->bRun = %d\n", pThread->thread_handle, pThread->bRun);
 			pThread->bRun = false;
+			usleep(100);
 			
 		}
 		else
@@ -106,12 +112,16 @@ int main(int argc, char **argv)
 
 				scootd_state_change(old_state, &scdThreadConfig[0]);
 
-
+				printf("SCOOTD: State Return\n");	
 
 
 
 				old_state = aScootDevice.pState->state;
 				sleep(1);
+			}
+			else
+			{
+			//	printf("SCOOTD: NO Change\n");
 			}
 			
 			usleep(100);

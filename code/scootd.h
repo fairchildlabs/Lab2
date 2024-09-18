@@ -36,7 +36,7 @@ typedef union
 
 #define SCOOTD_MAX_THREADS 16
 
-#define SCOOTD_THREAD_UTIL_BUFFER_SIZE 4096
+#define SCOOTD_THREAD_UTIL_BUFFER_SIZE 64
 
 
 typedef struct
@@ -45,6 +45,7 @@ typedef struct
 	pthread_t thread_handle;
 	char      *pOutBuffer;
 	char      szBuffer[SCOOTD_THREAD_UTIL_BUFFER_SIZE];
+	FILE            *pipe;
 	bool      bRun;
 
 } scootd_threads;
@@ -77,6 +78,7 @@ pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_threa
 char * scootd_util_run_command(scootd_thread_config *pScootThread, const char * command);
 
 
+int scootd_util_character_to_pipe(scootd_thread_config * pScootThread, char character);
 
 
 
