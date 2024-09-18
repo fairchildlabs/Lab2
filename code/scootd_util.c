@@ -42,18 +42,22 @@ int scootd_util_open_shared_memory(char * strFileName, scoot_device * pScoot)
 
 //AI: https://copilot.microsoft.com/sl/huDnvWgVZZY
 
-pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scoot_device *pScootDevice)
+pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_thread_config *pScootThreadConfig)
 {
 	pthread_t		thread;
 	int 			result;
 
 	// Create the thread
-	result				= pthread_create(&thread, NULL, thread_func, pScootDevice);
+	result				= pthread_create(&thread, NULL, thread_func, pScootThreadConfig);
 
 	if (result != 0)
 	{
 		fprintf(stderr, "Error creating thread\n");
 		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("Running Thread %p\n", thread);
 	}
 	
 
@@ -61,13 +65,64 @@ pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scoot_device
 }
 
 
-//AI: https://copilot.microsoft.com/sl/e3z9KEzxEyG
+//AI: https://copilot.microsoft.com/sl/jS6aPunFSKa
 
-
-void scootd_util_command_in_terminal(const char *command) 
+#define BUFFER_SIZE 512
+char * scootd_util_run_command(scootd_thread_config *pScootThread, const char * command)
 {
-    char buffer[512];
-    snprintf(buffer, sizeof(buffer), "lxterminal --geometry=80x24+0+0 -e bash -c %s; exec bash", command);
-    system(buffer);
+	scoot_device *pScootDevice;
+	
+	char			*buffer  ;
+	char *			result = NULL; 
+	size_t			result_size = 0;
+	FILE *			pipe = popen(command, "r");
+	int idx = pScootThread->thread_index;
+	int count = 0;
+	
+	scootd_threads   *pThread;
+	
+
+	pScootDevice = &pScootThread->pScootDevice[idx];
+
+	pThread = &pScootDevice->threads[idx]; 
+
+	buffer = pThread->szBuffer;
+	result = pThread->pOutBuffer;
+	
+	if(!pipe)
+	{
+		fprintf(stderr, "popen() failed!\n");
+		return NULL;
+	}
+
+	while ((pThread->bRun == true) && (fgets(buffer, BUFFER_SIZE, pipe) != NULL))
+	{
+		size_t			buffer_len = strlen(buffer);
+		char *			new_result = realloc(result, result_size + buffer_len + 1);
+
+		if (!new_result)
+		{
+			free(result);
+			fprintf(stderr, "realloc() failed!\n");
+			return NULL;
+		}
+
+		result				= new_result;
+		strcpy(result + result_size, buffer);
+		result_size 		+= buffer_len;
+		usleep(1000);
+		count++;
+
+		if((count % 1000) == 0)
+		{
+			printf("while %d\n", count);
+		}
+	}
+
+	printf("********************************\n%s\n", result);
+
+	pclose(pipe);
 }
+
+
 

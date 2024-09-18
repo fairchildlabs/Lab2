@@ -17,13 +17,15 @@ void * dummy_thread( void * pvScootDevice)
 }
 
 
-void * video0_run(void * pvScootDevice)
+void * video0_run(void * pvScootdThreads)
 {
 	char cmdbuf[512];
+	scootd_thread_config *pScootThread = pvScootdThreads;
+
+
+	sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 /var/www/html/video_13/00%10d_640x480.mp4", time(NULL));
 	
-	sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 /var/www/html/video_13/640x480_%d.mp4", time(NULL));
-	
-	scootd_util_command_in_terminal(cmdbuf);
+	scootd_util_run_command(pScootThread, cmdbuf);
 
 	return NULL;
 
@@ -33,18 +35,27 @@ void * video0_run(void * pvScootDevice)
 
 
 
-void scootd_state_change(unsigned int old_state, scoot_device * pScootDevice)
+void scootd_state_change(unsigned int old_state, scootd_thread_config *pScootdThreads)
 {
+	scoot_device *pScootDevice = pScootdThreads->pScootDevice;
 
+		
+	
 	if(pScootDevice->pState->bits.video0)
 	{
-		if(pScootDevice->thread_handles[SCOOTD_THREAD_VIDEO_0])
+
+		scootd_threads	 *pThread = pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0]; 
+
+
+		if(pThread->thread_handle)
 		{
-			SCOOTD_ASSERT(0);
+			printf("Thread[SCOOTD_THREAD_VIDEO_0] exits =%p, pThread->bRun = %d\n", pThread->thread_handle, pThread->bRun);
+			pThread->bRun = false;
+			
 		}
 		else
 		{
-			pScootDevice->thread_handles[SCOOTD_THREAD_VIDEO_0] = scootd_util_create_thread(video0_run, pScootDevice);
+			pThread->thread_handle = scootd_util_create_thread(video0_run, &pScootdThreads[SCOOTD_THREAD_VIDEO_0] );
 		}
 	}
 
@@ -59,12 +70,19 @@ int main(int argc, char **argv)
 {
 	unsigned int old_state = 0;
 	scoot_device aScootDevice;
-	
+	int i;
 	time_t t;
 	struct tm *tmp;
 	char formatted_time[50];
+	scootd_thread_config scdThreadConfig[SCOOTD_MAX_THREADS];
 
 	memset(&aScootDevice, 0, sizeof(scoot_device));
+	for(i = 0; i < SCOOTD_MAX_THREADS; i++)
+	{
+		scdThreadConfig[i].pScootDevice = &aScootDevice;
+		scdThreadConfig[i].thread_index = 0;
+	}
+
 
 	printf("scootd - Lab1\n");
 
@@ -86,7 +104,7 @@ int main(int argc, char **argv)
 				
 				printf("SCOOTD:State Change old_state = %d new_state = %d @ %s video0 = %d video1 = %d\n", old_state, aScootDevice.pState->state, formatted_time, aScootDevice.pState->bits.video0, aScootDevice.pState->bits.video1);
 
-				scootd_state_change(old_state, &aScootDevice);
+				scootd_state_change(old_state, &scdThreadConfig[0]);
 
 
 
