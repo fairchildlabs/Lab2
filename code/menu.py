@@ -85,11 +85,11 @@ while run:
     #draw pause screen buttons
      if record_button.draw(screen):
         menu_state = "record"
-        set_shared_ival(11)
+        set_shared_ival(1)
   else: 
      if stop_button.draw(screen):
         menu_state = "stop"
-        set_shared_ival(22)
+        set_shared_ival(0)
 
 
  
@@ -108,4 +108,4 @@ while run:
 
 shm.close()
 
-pygame.quit()
+pygame.quit()
