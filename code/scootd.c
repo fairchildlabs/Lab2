@@ -16,7 +16,7 @@ void * dummy_thread( void * pvScootDevice)
 
 }
 
-
+#define CMD_NONBLOCKING
 void * video0_run(void * pvScootdThreads)
 {
 	char cmdbuf[512];
@@ -24,9 +24,12 @@ void * video0_run(void * pvScootdThreads)
 
 
 	sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 /var/www/html/video_13/00%10d_640x480.mp4", time(NULL));
-	
-	scootd_util_run_command(pScootThread, cmdbuf);
 
+#ifdef CMD_NONBLOCKING
+	scootd_util_run_command_nonblocking(pScootThread, cmdbuf);
+#else
+	scootd_util_run_command(pScootThread, cmdbuf);
+#endif
 	return NULL;
 
 }
@@ -38,34 +41,31 @@ void * video0_run(void * pvScootdThreads)
 void scootd_state_change(unsigned int old_state, scootd_thread_config *pScootdThreads)
 {
 	scoot_device *pScootDevice = pScootdThreads->pScootDevice;
+	scoot_state  *pOldState = (scoot_state  *)&old_state;
+	scootd_threads	 *pThread;
+	
 
-	printf("scootd_state_change = %d\n", pScootDevice->pState->state);		
+	printf("scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);		
+
+	if(pOldState->bits.video0)
+	{
+		pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0]; 
+		
+		if(pThread->thread_handle)
+		{
+			scootd_util_kill_thread(pScootDevice, pThread);
+		}
+	}
 	
 	if(pScootDevice->pState->bits.video0)
 	{
 
-		scootd_threads	 *pThread = pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0]; 
+		pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0]; 
 
 
-		if(pThread->thread_handle)
-		{
-
-			printf("Send Q to pipe\n");
-			//scootd_util_character_to_pipe(&pScootdThreads[SCOOTD_THREAD_VIDEO_0], 'q');
-			pclose(pThread->pipe);
-			usleep(100);
-			printf("Thread[SCOOTD_THREAD_VIDEO_0] exits =%p, pThread->bRun = %d\n", pThread->thread_handle, pThread->bRun);
-			pThread->bRun = false;
-			usleep(100);
-			
-		}
-		else
-		{
-			pThread->thread_handle = scootd_util_create_thread(video0_run, &pScootdThreads[SCOOTD_THREAD_VIDEO_0] );
-		}
+		pThread->thread_handle = scootd_util_create_thread(video0_run, &pScootdThreads[SCOOTD_THREAD_VIDEO_0] );
 	}
-
-
+	
 
 
 }
@@ -87,6 +87,11 @@ int main(int argc, char **argv)
 	{
 		scdThreadConfig[i].pScootDevice = &aScootDevice;
 		scdThreadConfig[i].thread_index = 0;
+
+		aScootDevice.threads[i].idx = i;
+		aScootDevice.threads[i].pvScootDevice = &aScootDevice;
+
+		
 	}
 
 

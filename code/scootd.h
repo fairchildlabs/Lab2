@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 
 #define SCOOTD_ASSERT(_X) assert(_X)
 
@@ -41,12 +42,14 @@ typedef union
 
 typedef struct
 {
-
+	int        idx;
 	pthread_t thread_handle;
 	char      *pOutBuffer;
 	char      szBuffer[SCOOTD_THREAD_UTIL_BUFFER_SIZE];
 	FILE            *pipe;
 	bool      bRun;
+	pid_t pid;	
+	void      *pvScootDevice;
 
 } scootd_threads;
 
@@ -75,10 +78,14 @@ int scootd_util_open_shared_memory(char *strFileName, scoot_device *pScoot);
 
 pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_thread_config *pScootThreadConfig);
 
-char * scootd_util_run_command(scootd_thread_config *pScootThread, const char * command);
+int scootd_util_run_command(scootd_thread_config *pScootThread, const char * command);
+int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, const char * command);
+
+
 
 
 int scootd_util_character_to_pipe(scootd_thread_config * pScootThread, char character);
+int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread);
 
 
 
