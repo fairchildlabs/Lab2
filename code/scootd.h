@@ -46,9 +46,17 @@ typedef struct
 	pthread_t thread_handle;
 	char      *pOutBuffer;
 	char      szBuffer[SCOOTD_THREAD_UTIL_BUFFER_SIZE];
-	FILE            *pipe;
+	FILE            *outpipe;
+	FILE            *inpipe;
+
+	int       infd;
+	int      outfd;
+	pid_t      pid;	
+	
+
 	bool      bRun;
-	pid_t pid;	
+	bool      bDone;
+	
 	void      *pvScootDevice;
 
 } scootd_threads;
@@ -84,7 +92,7 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 
 
 
-int scootd_util_character_to_pipe(scootd_thread_config * pScootThread, char character);
+int scootd_util_character_to_pipe(scootd_threads * pThread, char character);
 int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread);
 
 
