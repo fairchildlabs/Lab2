@@ -7,18 +7,34 @@ Create a directory "labshare" on the LABPC, then right-click on it and choose "p
 ```
 $ sudo nano /etc/fstab
 
-
+** DEMO
 ** change the line like this: //OTIS-FAIRCHILD-/labshare /var/www/html/labshare  cifs  credentials=/var/www/.labsharecred,file_mode=0777,dir_mode=0777,noperm,iocharset=utf8 0
 ** make it match the name of your LABPC
+** Alternative, is replace //OTIS-FAIRCHILD with IP Address (from command prompt, ipconfig)
 ** <CTRL><X> then pick "Y" to save file
+
+
+
+
+$ nano ~/.bashrc
+
+** Add this line to the end of the file, then <CTRL><X> and 'Y' to save
+** alias lab="cd /var/www/html/labshare/"
 
 $ sudo reboot now
 
-** Wait for reboot 
+** Wait for reboot
 
-$ 
+$ lab
+
+** Should takeyou to /var/www/html/labshare
+
+
+
 
 ```
+
+
 
 ## 2.2 Modifications to scootd C Program
 
