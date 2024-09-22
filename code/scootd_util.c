@@ -298,74 +298,9 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 	printf("pThread(%p) PID = %d\n", pThread, pid);
 	
 	
-	fd_set			read_fds;
-
-	struct timeval timeout;
-
 	while (true == pThread->bRun) 
 	{
-		FD_ZERO(&read_fds);
-		FD_SET(pThread->infd, &read_fds);
-
-		timeout.tv_sec		= 0;					// 1 second timeout
-		timeout.tv_usec 	= usSelectTimeout;
-
-		//printf("scootd_util_run_command_nonblocking() SELECT = %d \n", count);
-
-		int 			ret = select(pThread->outfd, &read_fds, NULL, NULL, &timeout);
-
-		//printf("scootd_util_run_command_nonblocking() SELECT = %d ret = %d\n", count, ret);
-
-		count++;
-
-
 		
-		if (ret == -1)
-		{
-			fprintf(stderr, "select() failed!\n");
-			free(result);
-			pclose(pipe);
-			return -2;
-		}
-		else if (ret == 0)
-		{
-
-			usleep(usSelectTimeout);
-			printf("scootd_util_run_command_nonblocking() NO DATA usSelectTimeout = %d bRun = %d\n", usSelectTimeout, pThread->bRun);
-
-			// Timeout, no data available
-			continue;
-		}
-		else
-		{
-			printf("UNEXPECTED RETURN %d bRun =%d pid = %d\n", ret, pThread->bRun, pid);
-		}
-
-		if (FD_ISSET(pThread->infd, &read_fds))
-		{
-			if (fgets(buffer, SCOOTD_THREAD_UTIL_BUFFER_SIZE, pipe) == NULL)
-			{
-				break;								// End of file or error
-			}
-
-			printf("BUFFER***%s***\n", buffer);
-
-			size_t			buffer_len = strlen(buffer);
-			char *			new_result = realloc(result, result_size + buffer_len + 1);
-
-			if (!new_result)
-			{
-				free(result);
-				fprintf(stderr, "realloc() failed!\n");
-				pclose(pipe);
-				return -3;
-			}
-
-			result				= new_result;
-			strcpy(result + result_size, buffer);
-			result_size 		+= buffer_len;
-		}
-
 		usleep(usSelectTimeout);
 		//printf("scootd_util_run_command_nonblocking() usSelectTimeout = %d\n", usSelectTimeout);
 
