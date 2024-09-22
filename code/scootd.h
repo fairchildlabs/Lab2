@@ -95,6 +95,7 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 int scootd_util_character_to_pipe(scootd_threads * pThread, char character);
 int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread);
 
+int scootd_util_close_shared_memroy(scoot_device *pScoot);
 
 
 

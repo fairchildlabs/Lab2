@@ -39,6 +39,13 @@ int scootd_util_open_shared_memory(char * strFileName, scoot_device * pScoot)
 }
 
 
+int scootd_util_close_shared_memroy(scoot_device *pScoot)
+{
+	close(pScoot->shm_fd);
+	return 0;
+}
+
+
 
 //AI: https://copilot.microsoft.com/sl/huDnvWgVZZY
 
@@ -132,80 +139,6 @@ int pclose2(pid_t pid)
 }
 
 //AI: https://copilot.microsoft.com/sl/jS6aPunFSKa
-int scootd_util_run_command(scootd_thread_config *pScootThread, const char * command)
-{
-	scoot_device *pScootDevice;
-	FILE            *pipe;
-	char			*buffer  ;
-	char *			result = NULL; 
-	size_t			result_size = 0;
-	int idx = pScootThread->thread_index;
-	int count = 0;
-	
-	scootd_threads   *pThread;
-	
-
-	pScootDevice = &pScootThread->pScootDevice[idx];
-
-	pThread = &pScootDevice->threads[idx]; 
-
-	//int outfd, infd;
-	int pid = popen2(command, &pThread->infd, &pThread->outfd);
-
-	printf("POPEN PID = %d INFD = %d OUTFD %d \n", pid, pThread->infd, pThread->outfd);
-	
-	pThread->outpipe  = fdopen(pThread->outfd, "r");
-	pThread->inpipe = fdopen(pThread->infd, "w");
-	
-	buffer = pThread->szBuffer;
-	result = pThread->pOutBuffer;
-	pipe = pThread->outpipe;
-	
-	if(!pipe)
-	{
-		fprintf(stderr, "popen() failed!\n");
-		return -1;
-	}
-
-	while (pThread->bRun && (fgets(buffer, SCOOTD_THREAD_UTIL_BUFFER_SIZE, pipe) != NULL))
-	{
-		size_t			buffer_len = strlen(buffer);
-		char *			new_result = realloc(result, result_size + buffer_len + 1);
-
-		if (!new_result)
-		{
-			free(result);
-			fprintf(stderr, "realloc() failed!\n");
-			return -2;
-		}
-
-		result				= new_result;
-		strcpy(result + result_size, buffer);
-		result_size 		+= buffer_len;
-		count++;
-
-		if((count % 1000) == 0)
-		{
-		//	printf("while %d\n", count);
-		}
-	}
-
-	printf("********************************\n%s\n", result);
-	pThread->bDone = true;
-	return 0;
-}
-
-
-
-
-
-void closeProcess (int pid)
-{
-    printf("killing %d\n", pid);
-    kill(pid, SIGKILL);
-    return;
-}
-
 
 int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread)
 {

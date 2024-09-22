@@ -16,7 +16,6 @@ void * dummy_thread( void * pvScootDevice)
 
 }
 
-#define CMD_NONBLOCKING
 void * video0_run(void * pvScootdThreads)
 {
 	char cmdbuf[512];
@@ -25,11 +24,7 @@ void * video0_run(void * pvScootdThreads)
 
 	sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 /var/www/html/video_13/00%10d_640x480.mp4", time(NULL));
 
-#ifdef CMD_NONBLOCKING
 	scootd_util_run_command_nonblocking(pScootThread, cmdbuf);
-#else
-	scootd_util_run_command(pScootThread, cmdbuf);
-#endif
 	return NULL;
 
 }
@@ -129,9 +124,10 @@ int main(int argc, char **argv)
 			//	printf("SCOOTD: NO Change\n");
 			}
 			
-			usleep(100);
+			usleep(1000);
 		}
-
+		scootd_util_close_shared_memroy(&aScootDevice);
+		
 	}
 
 
