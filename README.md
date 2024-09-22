@@ -29,6 +29,15 @@ $ lab
 
 ** Should takeyou to /var/www/html/labshare
 
+$ pwd
+
+** Should see astros@mario:/var/www/html/labshare 
+
+$ git clone https://github.com/fairchildlabs/Lab1.git
+$ git clone https://github.com/fairchildlabs/Lab2.git
+$ cd Lab2/code
+$ make
+$ make scootdtest
 
 
 
