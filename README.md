@@ -1,4 +1,13 @@
 # Lab2
+```
+(Demonstration)
+$      - copy and paste into SSH or PI terminal (only the charecters after the $) 
+PI>    - means PI terminal ONLY (Touchscreen or VNC)
+//This is a comment in code, for information only, don't type
+LABPC>  0This means type this into the cmd window on your labpc
+$$$ This means the lines that follow can be copied and pasted all at once (multiple lines)
+2$  Means 2nd SSH Terminal 
+```
 
 ## 2.1 Create Local (LABPC) development environment
 
@@ -36,18 +45,32 @@ $ pwd
 $ git clone https://github.com/fairchildlabs/Lab1.git
 $ git clone https://github.com/fairchildlabs/Lab2.git
 $ cd Lab2/code
+$ sudo mkdir /var/www/html/video_13
 $ make
 $ make scootdtest
+$ ./scootd
 
+** We are going to open a second terminal to same pi, Denoted as 2$
+2$ lab
+2$ cd Lab2/code
+2$ ./scootdtest 1
 
+** Observe How Video Captures starts in the other directory
 
+** Open terminal in VNC or directly to PI
+PI> lab
+PI> cd Lab2/code
+PI> python menu.py
+
+** Push stop and start buttons, then see what happens on the scootd program running in the terminal
 ```
 
 
 
-## 2.2 Modifications to scootd C Program
+## 2.3 Modifications to scootd C Program
 
-### Create Threads
-https://copilot.microsoft.com/sl/kowr2FsQVfE
+**DEMO -- configure source editor on the LABPC
+
+**DEMO -- use Meld to look at the difference between Lab1 and Lab2 code
 
 
