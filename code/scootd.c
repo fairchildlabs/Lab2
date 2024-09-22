@@ -16,7 +16,7 @@ void * dummy_thread( void * pvScootDevice)
 
 }
 
-//#define CMD_NONBLOCKING
+#define CMD_NONBLOCKING
 void * video0_run(void * pvScootdThreads)
 {
 	char cmdbuf[512];

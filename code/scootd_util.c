@@ -168,7 +168,7 @@ int scootd_util_run_command(scootd_thread_config *pScootThread, const char * com
 		return -1;
 	}
 
-	while ((fgets(buffer, SCOOTD_THREAD_UTIL_BUFFER_SIZE, pipe) != NULL))
+	while (pThread->bRun && (fgets(buffer, SCOOTD_THREAD_UTIL_BUFFER_SIZE, pipe) != NULL))
 	{
 		size_t			buffer_len = strlen(buffer);
 		char *			new_result = realloc(result, result_size + buffer_len + 1);
@@ -287,13 +287,21 @@ int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread
 		printf("GOOD -  CHAR 'q' to piope(%d)\n", pThread->idx);
 	}
 
+	pThread->bRun = false;
 	printf("Sending SIGTERM\n");
 	kill(pThread->pid, SIGTERM);
 	printf("Sending SIGTERM kill done\n");
 	usleep(100);
 	waitpid(pThread->pid, NULL, 0);
 	usleep(100);
-	printf("Done WAIT PID");
+	printf("Done WAIT PID(%d)\n", pThread->pid);
+	pclose2(pThread->pid);
+	printf("Done pclose2\n");
+	pThread->pid = (-1);
+
+	printf("*********OUTPUT FROM THREAD(%d)********************\n%s\n", pThread->idx, pThread->pOutBuffer);
+	printf("*********END OUTPUT FROM THREAD(%d)********************\n", pThread->idx);
+	
 	
 
 #if 0
@@ -329,7 +337,6 @@ int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread
 
 
 
-#if 0
 
 int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, const char * command)
 {
@@ -353,13 +360,18 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 
 	printf("scootd_util_run_command_nonblocking() POPEN usSelectTimeout = %d (%s)\n", usSelectTimeout, command);
 
-	pThread->pipe = popen2(command, "r");
+	pid = popen2(command, &pThread->infd, &pThread->outfd);
 
-	printf("scootd_util_run_command_nonblocking() POPEN POST = %d (%p)\n", usSelectTimeout, pThread->pipe);
+	printf("POPEN PID = %d INFD = %d OUTFD %d \n", pid, pThread->infd, pThread->outfd);
+	
+	pThread->outpipe  = fdopen(pThread->outfd, "r");
+	pThread->inpipe = fdopen(pThread->infd, "w");
 
+	pThread->pid = pid;
+	
 	buffer = pThread->szBuffer;
 	result = pThread->pOutBuffer;
-	pipe = pThread->pipe;
+	pipe = pThread->outpipe;
 
 	if (!pipe)
 	{
@@ -387,14 +399,14 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 	while (true == pThread->bRun) 
 	{
 		FD_ZERO(&read_fds);
-		FD_SET(pipe_fd, &read_fds);
+		FD_SET(pThread->outfd, &read_fds);
 
 		timeout.tv_sec		= 0;					// 1 second timeout
 		timeout.tv_usec 	= usSelectTimeout;
 
 		//printf("scootd_util_run_command_nonblocking() SELECT = %d \n", count);
 
-		int 			ret = select(pipe_fd + 1, &read_fds, NULL, NULL, &timeout);
+		int 			ret = select(pThread->outfd, &read_fds, NULL, NULL, &timeout);
 
 		//printf("scootd_util_run_command_nonblocking() SELECT = %d ret = %d\n", count, ret);
 
@@ -423,12 +435,14 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 			printf("UNEXPECTED RETURN %d bRun =%d pid = %d\n", ret, pThread->bRun, pid);
 		}
 
-		if (FD_ISSET(pipe_fd, &read_fds))
+		if (FD_ISSET(pThread->outfd, &read_fds))
 		{
 			if (fgets(buffer, SCOOTD_THREAD_UTIL_BUFFER_SIZE, pipe) == NULL)
 			{
 				break;								// End of file or error
 			}
+
+			printf("BUFFER***%s***\n", buffer);
 
 			size_t			buffer_len = strlen(buffer);
 			char *			new_result = realloc(result, result_size + buffer_len + 1);
@@ -462,7 +476,6 @@ int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, cons
 	return 0;
 }
 
-#endif
 
 
 
