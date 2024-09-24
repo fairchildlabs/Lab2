@@ -28,7 +28,9 @@ $ sudo nano /etc/fstab
 $ nano ~/.bashrc
 
 ** Add this line to the end of the file, then <CTRL><X> and 'Y' to save
-** alias lab="cd /var/www/html/labshare/"
+alias lab="cd /var/www/html/labshare/"
+<CTRL><X> then pick "Y" to save file
+
 
 $ sudo reboot now
 
